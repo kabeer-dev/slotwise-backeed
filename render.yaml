@@ -1,0 +1,40 @@
+# Render Blueprint: API + PostgreSQL.
+# Render → New → Blueprint → select this repository.
+# After the first deploy, set CORS_ORIGINS (your frontend URL) and MISTRAL_API_KEY
+# in the slotwise-api service → Environment.
+
+databases:
+  - name: slotwise-db
+    plan: free
+    databaseName: slotwise
+    user: slotwise
+
+services:
+  - type: web
+    name: slotwise-api
+    runtime: node
+    plan: free
+    # devDependencies (TypeScript) are needed to build.
+    buildCommand: npm ci --include=dev && npm run build
+    # Schema + seed are idempotent; applied on each start.
+    startCommand: node dist/db/migrate.js --seed && node dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: slotwise-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: 'false' # Render internal URL; use 'true' for Neon/Supabase/external URLs
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: '1'
+      - key: CORS_ORIGINS
+        sync: false # e.g. https://slotwise-frontend.vercel.app
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: MISTRAL_MODEL
+        value: mistral-small-latest

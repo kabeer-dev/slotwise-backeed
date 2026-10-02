@@ -1,0 +1,73 @@
+### Slotwise API — example requests
+### Works with the VS Code "REST Client" extension or JetBrains HTTP client.
+
+@api = http://localhost:4000/api/v1
+@dental = 5e000000-0000-4000-8000-000000000003
+
+### Health
+GET http://localhost:4000/health
+
+### Public business info
+GET {{api}}/businesses/lumen-clinic
+
+### Sign up
+POST {{api}}/auth/signup
+Content-Type: application/json
+
+{ "fullName": "Sara Malik", "email": "sara@example.com", "password": "Passw0rd!" }
+
+### Log in (copy "token" into @token below)
+# @name login
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "demo@slotwise.dev", "password": "Demo@12345" }
+
+###
+@token = {{login.response.body.token}}
+
+### Me
+GET {{api}}/auth/me
+Authorization: Bearer {{token}}
+
+### Services
+GET {{api}}/services
+Authorization: Bearer {{token}}
+
+### Availability (use an upcoming Mon–Sat date)
+GET {{api}}/appointments/availability?serviceId={{dental}}&date=2026-10-07
+Authorization: Bearer {{token}}
+
+### Book with the form endpoint
+POST {{api}}/appointments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "serviceId": "{{dental}}", "date": "2026-10-07", "time": "14:00", "notes": "First visit" }
+
+### My upcoming appointments
+GET {{api}}/appointments?scope=upcoming
+Authorization: Bearer {{token}}
+
+### Start a conversation
+# @name session
+POST {{api}}/chat/sessions
+Authorization: Bearer {{token}}
+
+###
+@sessionId = {{session.response.body.session.id}}
+
+### Send a message
+POST {{api}}/chat/sessions/{{sessionId}}/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content": "I need a dental cleaning next Wednesday at 3pm" }
+
+### Confirm the pending booking summary
+POST {{api}}/chat/sessions/{{sessionId}}/confirm
+Authorization: Bearer {{token}}
+
+### Conversation history
+GET {{api}}/chat/sessions/{{sessionId}}/messages?limit=20
+Authorization: Bearer {{token}}
